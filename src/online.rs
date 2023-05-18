@@ -37,6 +37,15 @@ struct State {
 }
 
 impl OnlineTdigest {
+    pub fn from_tdigest(digest: TDigest) -> Self {
+        Self {
+            state: Mutex::new(State {
+                current: digest,
+                amortized_observations: Default::default(),
+                i: Default::default(),
+            })
+        }
+    }
     /// Get the current tdigest, merging any outstanding observations.
     pub fn get(&self) -> TDigest {
         let mut state = self.state.lock().expect("lock should never fail");
@@ -128,6 +137,8 @@ fn flush_state(state: &mut State) {
 
 #[cfg(test)]
 mod tests {
+    use crate::TDigest;
+
     use super::OnlineTdigest;
 
     #[test]
@@ -143,6 +154,7 @@ mod tests {
         let error = 9_990.0 - digest.estimate_quantile(0.999);
         assert!(-1.0 < error && error < 1.0);
     }
+
 
     #[test]
     fn reset() {
